@@ -1,4 +1,4 @@
-# Strava Bulk Privacy Updater 🚴🏃‍♂️
+# Strava Bulk Privacy Updater 🚴🏃‍♂️🚴‍♂️ 🏊‍♂️ 🏋️‍♂️ 🎿 🚶‍♂️
 
 *A Tampermonkey userscript to bulk-update Strava activity privacy settings. This script will run in your browser and cycle through all  your activites and update the privacy settings of each activity in bulk.*
 
