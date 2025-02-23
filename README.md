@@ -74,7 +74,6 @@ First, install **Tampermonkey**, a browser extension that runs userscripts.
 
 ## 📝 License
 This project is licensed under the **MIT License**.  
-*(Feel free to replace with another open-source license.)*
 
 ---
 
