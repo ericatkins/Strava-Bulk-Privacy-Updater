@@ -51,9 +51,7 @@ First, install **Tampermonkey**, a browser extension that runs userscripts.
 ---
 
 ## 🖥️ Demo Screenshot
-*(Insert an image here if you have one. Example placeholder below.)*
-
-![Demo Screenshot](https://via.placeholder.com/800x400.png?text=Strava+Bulk+Privacy+Updater)
+Coming soon???
 
 ---
 
@@ -79,8 +77,6 @@ This project is licensed under the **MIT License**.
 
 ## 📢 Contributing
 💡 Have suggestions or improvements? Open a **pull request** or **issue** in this repository!  
-
-🔗 **Repository:** [GitHub Repo Link Here](https://github.com/YOUR-USERNAME/YOUR-REPO)
 
 ---
 
