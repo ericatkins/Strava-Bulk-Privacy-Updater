@@ -2,6 +2,9 @@
 
 *A Tampermonkey userscript to bulk-update Strava activity privacy settings. This script will run in your browser and cycle through all  your activites and update the privacy settings of each activity in bulk.*
 
+## Quick Start
+Download the .js file and put it in Tamper Monkey to begin.  Else, read below.
+
 ## 📌 Overview
 
 This **Tampermonkey** userscript automates the process of updating privacy settings (e.g., **Public, Followers, or Only Me**) for multiple Strava activities at once. It allows you to filter updates by **weekdays, weekends, or all days**, and it **gracefully handles pagination**, ensuring every page of activities is processed.
