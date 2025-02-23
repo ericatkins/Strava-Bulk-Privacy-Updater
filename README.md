@@ -1,13 +1,10 @@
-# Strava Bulk Privacy Updater 🚴🏃‍♂️🚴‍♂️ 🏊‍♂️ 🏋️‍♂️ 🎿 🚶‍♂️
+# Strava Bulk Privacy Updater 🚴‍♂️🏃‍♂️🏊‍♂️🏋️‍♂️🎿🚶‍♂️
 
-*A Tampermonkey userscript to bulk-update Strava activity privacy settings. This script will run in your browser and cycle through all  your activites and update the privacy settings of each activity in bulk.*
-
-## Quick Start
-Download the .js file and put it in Tamper Monkey to begin.  Else, read below.
+*A Tampermonkey userscript to bulk-update Strava activity privacy settings.*
 
 ## 📌 Overview
 
-This **Tampermonkey** userscript automates the process of updating privacy settings (e.g., **Public, Followers, or Only Me**) for multiple Strava activities at once. It allows you to filter updates by **weekdays, weekends, or all days**, and it **gracefully handles pagination**, ensuring every page of activities is processed.
+This **Tampermonkey** userscript automates the process of updating privacy settings (**Public, Followers, or Only Me**) for multiple Strava activities at once. It allows you to filter updates by **weekdays, weekends, or all days**, and it **gracefully handles pagination**, ensuring every page of activities is processed.
 
 ✅ **Features**
 - **🔄 Bulk Updates** – Change multiple activity privacy settings with one click.
@@ -54,7 +51,15 @@ First, install **Tampermonkey**, a browser extension that runs userscripts.
 ---
 
 ## 🖥️ Demo Screenshot
-Coming soon???
+*(Insert an image here if you have one. Example placeholder below.)*
+
+![Demo Screenshot](https://via.placeholder.com/800x400.png?text=Strava+Bulk+Privacy+Updater)
+
+---
+
+## 🚨 Feedback & Issues  
+Have **questions, feature requests, or found a bug**?   
+👉 **[Post an issue here](https://github.com/ericatkins/Strava-Bulk-Privacy-Updater/issues)**
 
 ---
 
@@ -73,13 +78,21 @@ Coming soon???
 
 ---
 
+## 📥 Install via GitHub
+[📥 Click here to install](https://raw.githubusercontent.com/ericatkins/Strava-Bulk-Privacy-Updater/main/strava-privacy-updater.user.js)
+
+---
+
 ## 📝 License
 This project is licensed under the **MIT License**.  
+*(Feel free to replace with another open-source license.)*
 
 ---
 
 ## 📢 Contributing
 💡 Have suggestions or improvements? Open a **pull request** or **issue** in this repository!  
+
+🔗 **Repository:** [GitHub Repo](https://github.com/ericatkins/Strava-Bulk-Privacy-Updater)
 
 ---
 
