@@ -1,23 +1,63 @@
 // ==UserScript==
 // @name         Strava Bulk Privacy Updater (Counter)
 // @namespace    https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPO-NAME
-// @version      1.0
+// @version      1.1
 // @description  Bulk-updates Strava activities privacy (everyone/followers/only me) for selected weekdays/weekends/all, with a live update counter.
 // @match        https://www.strava.com/athlete/training*
 // @grant        none
+// @license      MIT
 // ==/UserScript==
 
-(function() {
-  'use strict';
+/*
+ * MIT License
+ *
+ * Copyright (c) 2024 YOUR NAME
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
-  /********************************************************************
-   * 1) Insert the UI Elements at the top-right:
-   *    - "Bulk Privacy Update" button
-   *    - A counter ("Updated: 0") that we can update dynamically
-   ********************************************************************/
-  let updateCounterEl = null; // We'll store a reference to this element
+(function () {
+  "use strict";
+
+  /***************** CONFIGURATION CONSTANTS *****************/
+  // Define styles for the button
+  const BUTTON_STYLES = `
+    background-color: #fc5200;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-bottom: 8px;
+    font-weight: bold;
+  `;
+  
+  // Delays for page load and next page actions
+  const PAGE_LOAD_DELAY = 1500; // Time to wait for the activities to load
+  const NEXT_PAGE_DELAY = 2000; // Time to wait before navigating to next page
+
+  let updateCounterEl = null; // Element to display the number of activities updated
+  let isProcessing = false; // Flag to prevent multiple clicks while script is running
+
+  /***************** INSERT UI ELEMENTS *****************/
   function insertUIElements() {
-    // A container for both button + counter
+    // Create a container for UI elements
     const container = document.createElement("div");
     container.style.position = "fixed";
     container.style.top = "80px";
@@ -25,228 +65,84 @@
     container.style.zIndex = "9999";
     container.style.padding = "8px";
 
-    // The main button
+    // Create the button to start the script
     const btn = document.createElement("button");
     btn.id = "startPrivacyScript";
     btn.textContent = "Bulk Privacy Update";
-    // Some styling (Strava orange)
-    btn.style.backgroundColor = "#fc5200";
-    btn.style.color = "white";
-    btn.style.border = "none";
-    btn.style.padding = "8px 12px";
-    btn.style.cursor = "pointer";
-    btn.style.borderRadius = "4px";
-    btn.style.marginBottom = "8px";
+    btn.style = BUTTON_STYLES;
     btn.addEventListener("click", startScript);
 
-    // The counter display (just text)
+    // Create a display to show the number of updated activities
     updateCounterEl = document.createElement("div");
     updateCounterEl.textContent = "Activities Updated: 0";
-    updateCounterEl.style.backgroundColor = "#fff";
-    updateCounterEl.style.color = "#333";
-    updateCounterEl.style.padding = "4px 8px";
-    updateCounterEl.style.borderRadius = "4px";
-    updateCounterEl.style.marginTop = "8px";
-    updateCounterEl.style.fontWeight = "bold";
+    updateCounterEl.style = "background-color: #fff; color: #333; padding: 4px 8px; border-radius: 4px; font-weight: bold;";
 
+    // Add elements to the page
     container.appendChild(btn);
     container.appendChild(updateCounterEl);
     document.body.appendChild(container);
   }
 
-  /********************************************************************
-   * 2) The main script logic:
-   *    - Prompt user for privacy setting & day-of-week filter
-   *    - Loop over pages, calling setActivityPrivacy() for matched days
-   *    - Stop gracefully when no more "Next" pages
-   *    - Keep track of how many we’ve updated, displayed in updateCounterEl
-   ********************************************************************/
+  /***************** MAIN SCRIPT LOGIC *****************/
   async function startScript() {
-    // Keep a count of how many activities we've updated
-    let updatedCount = 0;
+    if (isProcessing) return; // Prevent multiple script executions
+    isProcessing = true;
+    document.getElementById("startPrivacyScript").disabled = true; // Disable button during execution
 
-    /************** A) Prompt for Privacy Setting **************/
-    const validPrivacyOptions = ["everyone", "followers", "only me"];
-    let userPrivacyChoice = prompt(
-      "Which privacy setting?\nOptions: everyone / followers / only me",
-      "followers"
-    );
-    if (!userPrivacyChoice) return; // user canceled
-    userPrivacyChoice = userPrivacyChoice.trim().toLowerCase();
-    if (!validPrivacyOptions.includes(userPrivacyChoice)) {
-      alert("Invalid privacy option. Must be: everyone, followers, or only me.");
-      return;
-    }
+    let updatedCount = 0; // Tracks the number of activities updated
+    const privacyMap = { "everyone": "everyone", "followers": "followers_only", "only me": "only_me" };
+    const dayOptions = ["weekends", "weekdays", "all"];
 
-    // Map user choice to Strava <select> values
-    let privacyValue;
-    switch (userPrivacyChoice) {
-      case "everyone":
-        privacyValue = "everyone";
-        break;
-      case "followers":
-        privacyValue = "followers_only";
-        break;
-      case "only me":
-        privacyValue = "only_me";
-        break;
-    }
+    // Prompt the user for privacy setting
+    let userPrivacyChoice = prompt("Privacy setting? (everyone/followers/only me)", "followers");
+    if (!userPrivacyChoice || !privacyMap[userPrivacyChoice.toLowerCase()]) return;
+    userPrivacyChoice = privacyMap[userPrivacyChoice.toLowerCase()];
 
-    /************** B) Prompt for Day-of-Week Filter **************/
-    const validDayOptions = ["weekends", "weekdays", "all"];
-    let userDayChoice = prompt(
-      "Which days?\nOptions: weekends / weekdays / all",
-      "all"
-    );
-    if (!userDayChoice) return; // user canceled
-    userDayChoice = userDayChoice.trim().toLowerCase();
-    if (!validDayOptions.includes(userDayChoice)) {
-      alert("Invalid day option. Must be: weekends, weekdays, or all.");
-      return;
-    }
+    // Prompt the user for day filter
+    let userDayChoice = prompt("Which days? (weekends/weekdays/all)", "all");
+    if (!userDayChoice || !dayOptions.includes(userDayChoice.toLowerCase())) return;
+    userDayChoice = userDayChoice.toLowerCase();
 
-    // Helper to check if a given Date is in the user’s chosen day filter
+    // Function to check if an activity date matches the user’s selected filter
     function isDateInSelectedRange(d) {
-      // getDay() => 0=Sun..6=Sat
-      const day = d.getDay();
-      const isWeekend = (day === 0 || day === 6); // Sunday or Saturday
-
-      if (userDayChoice === "all") return true;
-      if (userDayChoice === "weekends") return isWeekend;
-      // else "weekdays"
-      return !isWeekend;
+      const day = d.getDay(); // Get day of the week (0=Sunday, 6=Saturday)
+      const isWeekend = day === 0 || day === 6;
+      return userDayChoice === "all" || (userDayChoice === "weekends" ? isWeekend : !isWeekend);
     }
 
-    /************** C) Loop Through All Pages **************/
     let currentPage = 1;
     while (true) {
-      console.log(`Processing page ${currentPage}...`);
-
-      // Wait a bit for the table to load
-      await delay(1500);
-
-      // Grab rows from #search-results
+      await delay(PAGE_LOAD_DELAY);
       const rows = document.querySelectorAll("#search-results tbody tr");
-      if (!rows.length) {
-        console.log("No activity rows found on this page.");
-      } else {
-        // Iterate over each row
-        for (const row of rows) {
-          // Find the date cell
+      if (!rows.length) break;
+
+      for (const row of rows) {
+        try {
           const dateCell = row.querySelector(".col-date");
           if (!dateCell) continue;
+          const activityDate = new Date(dateCell.textContent.trim());
 
-          const dateText = dateCell.textContent.trim();
-          const activityDate = new Date(dateText);
-
-          if (isNaN(activityDate.getTime())) {
-            console.warn("Could not parse date:", dateText);
-            continue;
+          if (!isNaN(activityDate.getTime()) && isDateInSelectedRange(activityDate)) {
+            await setActivityPrivacy(row, userPrivacyChoice);
+            updateCounterEl.textContent = `Activities Updated: ${++updatedCount}`;
           }
-
-          // Check if it matches user’s chosen day filter
-          if (isDateInSelectedRange(activityDate)) {
-            // Update privacy, then increment the counter
-            await setActivityPrivacy(row, privacyValue);
-            updatedCount++;
-            updateCounterEl.textContent = `Activities Updated: ${updatedCount}`;
-          } else {
-            console.log(`Skipping ${dateText} (not matching ${userDayChoice})`);
-          }
+        } catch (err) {
+          console.error("Error processing row:", err);
         }
       }
 
-      // Look for next-page or pagination link
-      const nextBtn = document.querySelector(
-        ".pagination .next_page, .pagination .pagination-next"
-      );
-
-      // Check if missing, disabled, aria-disabled, or replaced with <span>
-      if (
-        !nextBtn ||
-        nextBtn.classList.contains("disabled") ||
-        nextBtn.hasAttribute("disabled") ||
-        nextBtn.getAttribute("aria-disabled") === "true" ||
-        nextBtn.tagName.toLowerCase() === "span"
-      ) {
-        console.log("No next-page button found or it's disabled. Ending script gracefully.");
-        break;
-      }
-
-      // Otherwise, go to the next page
+      const nextBtn = document.querySelector(".pagination .next_page, .pagination .pagination-next");
+      if (!nextBtn || nextBtn.classList.contains("disabled")) break;
       nextBtn.click();
+      await delay(NEXT_PAGE_DELAY);
       currentPage++;
-
-      // Wait for next page to load
-      await delay(3000);
     }
 
-    /************** D) Final Alert on Completion **************/
-    alert(
-      `Done!\n` +
-      `Privacy set to "${userPrivacyChoice}"\n` +
-      `Days filtered: "${userDayChoice}"\n` +
-      `Total updated: ${updatedCount}.`
-    );
+    alert(`Done! Privacy: ${userPrivacyChoice}, Days: ${userDayChoice}, Total Updated: ${updatedCount}`);
+    document.getElementById("startPrivacyScript").disabled = false;
+    isProcessing = false;
   }
 
-  /********************************************************************
-   * 3) setActivityPrivacy(row, privacyValue)
-   *    For a single table row:
-   *      - click ".quick-edit"
-   *      - wait for #visibility <select>
-   *      - set the value
-   *      - click "Save"
-   ********************************************************************/
-  function setActivityPrivacy(row, privacyValue) {
-    return new Promise((resolve) => {
-      try {
-        const editBtn = row.querySelector(".quick-edit");
-        if (!editBtn) {
-          console.warn("No quick-edit button in row. Skipping...");
-          return resolve();
-        }
-        editBtn.click();
-
-        // Wait for the edit form to appear
-        setTimeout(() => {
-          const select = row.querySelector("select#visibility");
-          if (!select) {
-            console.warn("No #visibility select found. Possibly a timing issue.");
-            return resolve();
-          }
-          // e.g. "everyone", "followers_only", "only_me"
-          select.value = privacyValue;
-
-          // Find "Save" button
-          const saveBtn = row.querySelector("button[type='submit'].btn.btn-default");
-          if (!saveBtn) {
-            console.warn("No Save button found in the edit form.");
-            return resolve();
-          }
-          saveBtn.click();
-
-          // Wait a second for finalization
-          setTimeout(() => {
-            resolve();
-          }, 1000);
-        }, 800);
-      } catch (err) {
-        console.error("Error setting privacy:", err);
-        resolve();
-      }
-    });
-  }
-
-  /********************************************************************
-   * 4) delay(ms): helper function to wait "ms" milliseconds
-   ********************************************************************/
-  function delay(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-  }
-
-  /********************************************************************
-   * 5) Insert the UI Elements (button + counter) on page load
-   ********************************************************************/
+  // Insert UI elements when the script loads
   insertUIElements();
 })();
